@@ -1,0 +1,132 @@
+local plr = game:GetService("Players").LocalPlayer
+local rs = game:GetService("RunService")
+
+local flyOn = false
+local conns = {}
+local power = 5000 
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "FLING"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+
+local btn = Instance.new("TextButton")
+btn.Size = UDim2.new(0, 80, 0, 30)
+btn.Position = UDim2.new(0, 20, 0, 20) 
+btn.BackgroundColor3 = Color3.new(0, 0, 0)
+btn.BackgroundTransparency = 0.1
+btn.Text = "FLING OFF"
+btn.TextColor3 = Color3.new(1, 1, 1)
+btn.TextSize = 10
+btn.Parent = gui
+
+local box = Instance.new("TextBox")
+box.Size = UDim2.new(0, 60, 0, 30)
+box.Position = UDim2.new(0, 105, 0, 20)
+box.BackgroundColor3 = Color3.new(0, 0, 0)
+box.BackgroundTransparency = 0.1
+box.Text = "5000"
+box.TextColor3 = Color3.new(1, 1, 1)
+box.TextSize = 10
+box.Parent = gui
+
+local function makeDrag(obj)
+    local drag, start, pos
+    obj.InputBegan:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+            drag = true; start = i.Position; pos = obj.Position
+        end
+    end)
+    obj.InputChanged:Connect(function(i)
+        if drag then
+            local d = i.Position - start
+            obj.Position = UDim2.new(pos.X.Scale, pos.X.Offset + d.X, pos.Y.Scale, pos.Y.Offset + d.Y)
+        end
+    end)
+    obj.InputEnded:Connect(function(i)
+        if i.UserInputType == Enum.UserInputType.Touch or i.UserInputType == Enum.UserInputType.MouseButton1 then
+            drag = false
+        end
+    end)
+end
+
+makeDrag(btn)
+makeDrag(box)
+
+box.FocusLost:Connect(function()
+    local num = tonumber(box.Text)
+    if num then
+        power = num
+        box.Text = tostring(power)
+    else
+        box.Text = tostring(power)
+    end
+end)
+
+local function toggle(state)
+    flyOn = state
+    for _, c in pairs(conns) do if c then c:Disconnect() end end
+    conns = {}
+    
+    if flyOn then
+        table.insert(conns, rs.Stepped:Connect(function()
+            if not flyOn then return end
+            local char = plr.Character
+            if not char then return end
+            
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            
+            if hum and hrp then
+                hum.PlatformStand = false
+                hum.AutoRotate = true
+                local s = hum:GetState()
+                if s == Enum.HumanoidStateType.Physics or s == Enum.HumanoidStateType.Ragdoll then
+                    hum:ChangeState(Enum.HumanoidStateType.GettingUp)
+                end
+            end
+            
+            for _, p in pairs(game.Players:GetPlayers()) do
+                if p ~= plr and p.Character then
+                    for _, v in pairs(p.Character:GetDescendants()) do
+                        if v:IsA("BasePart") then
+                            pcall(function() v.CanCollide = false end)
+                        end
+                    end
+                end
+            end
+        end))
+        
+        table.insert(conns, rs.Heartbeat:Connect(function()
+            if not flyOn then return end
+            local char = plr.Character
+            if not char then return end
+            
+            local hrp = char:FindFirstChild("HumanoidRootPart")
+            local hum = char:FindFirstChildOfClass("Humanoid")
+            
+            if hrp and hum then
+                local vel = hrp.AssemblyLinearVelocity
+                hum:ChangeState(Enum.HumanoidStateType.Running)
+                
+                local sy = vel.Y
+                if sy > 40 then sy = 40 end
+                if sy < -40 then sy = -40 end
+                
+                hrp.AssemblyAngularVelocity = Vector3.new(power, power, power)
+                hrp.AssemblyLinearVelocity = Vector3.new(vel.X * 1.1, sy, vel.Z * 1.1)
+                
+                rs.RenderStepped:Wait()
+                if hrp and hrp.Parent then
+                    hrp.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+                end
+            end
+        end))
+    end
+end
+
+btn.MouseButton1Click:Connect(function()
+    flyOn = not flyOn
+    btn.Text = flyOn and "FLING ON" or "FLING OFF"
+    toggle(flyOn)
+end)
