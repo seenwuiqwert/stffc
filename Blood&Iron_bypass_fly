@@ -1,0 +1,138 @@
+本地UIS=游戏：GetService("UserInputService")
+本地RS=游戏：GetService("RunService")
+本地玩家=游戏：GetService(“玩家”)
+本地播放器=players.LocalPlayer
+
+local flyOn = false
+local flySpeed = 60
+local flyConn = nil
+
+if game:GetService("CoreGui"):FindFirstChild("FLY_UI") then game:GetService("CoreGui").FLY_UI:Destroy() end
+pcall(function() if gethui and gethui():FindFirstChild("FLY_UI") then gethui().FLY_UI:Destroy() end end)
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "FLY_UI"
+gui.ResetOnSpawn = false
+gui.Parent = game:GetService("CoreGui")
+pcall(function() if gethui then gui.Parent = gethui() end end)
+
+local btn = Instance.new("TextButton")
+它们的体积是:
+btn.Position=UDim2.new(0，20，0，20)
+btn.BackgroundColor3=Color3.new(0，0，0)
+btn.BackgroundTransparency=0.1
+btn.Text="起飞"
+btn.TextColor3=Color3.new(1，1，1)
+btn.TextSize=10
+美国
+没有任何其他文件.
+btn.Parent=gui
+实例。new("UICorner"，btn).CornerRadius=UDIM.new(0，4)
+
+本地框=Instance.new("TextBox")
+box.Size=UDim2.new(0，60，0，30)
+box.Position=UDim2.new(0，105，0，20)
+Box.BackgroundColor3=Color3.new(0，0，0)
+box.BackgroundTransparency=0.1
+box.Text="60"
+box.TextColor3=Color3.new(1，1，1)
+box.TextSize=10
+字体: 
+box.Parent=gui
+Instance.new("UIC角"，框).角半径=UDim.new(0，4)
+
+局部函数toggleFly()
+如果flyOn，则
+flyOn=false
+btn.Text="起飞"
+btn.BackgroundColor3=Color3.new(0，0，0)
+如果flyConn，则flyConn：断开()flyConn=nil结束
+其他
+本地字符=播放器.字符
+如果不是charge，则返回end
+本地HRP=char:FindFirstChild("HumanoidRootPart")
+局部hum=char:FindFirstChildOfClass("Humanoid")
+如果不是HRP或不是哼声，则返回结束
+
+flyOn=true
+btn.Text="起飞"
+btn.BackgroundColor3=Color3.fromRGB(30，30，30)
+
+flyConn=RS.Render步进：连接(函数()
+如果不是flyOn，则返回结束
+本地根=player.Character和运动员。角色：FindFirstChild("HumanoidRootPart")
+本地h=播放器.字符和运动员。字符：FindFirstChildOfClass("Humanoid")
+如果不是root或不是h或h.Health<=0，则
+返回
+结束
+
+本地摄像机=工作区.CurrentCamera
+局部凸轮CF=凸轮.C框架
+局部前进=凸轮CF.LookVector
+局部右=camCF.Right矢量
+
+局部finalDir=Vector3.zero
+本地md=h.MoveDirection
+            if md.Magnitude > 0.01 then
+局部f=md：点(fwd)
+局部r=md：点(右)
+finalDir=前进*f+右*r
+结束
+
+局部kx，kz=0，0
+如果UIS:IsKeyDown(Enum.KeyCode.W)，则kz=kz+1结束
+如果UIS:IsKeyDown(Enum.KeyCode.S)，则kz=kz-1结束
+如果UIS:IsKeyDown(Enum.KeyCode.A)，则kx=kx-1结束
+如果UIS:IsKeyDown(Enum.KeyCode.D)，则kx=kx+1结束
+如果kx~=0或kz~=0，则
+finalDir=finalDir+前进*kz+右*kx
+结束
+
+local up=0
+如果UIS:IsKeyDown(Enum.KeyCode.Space)，则up=up+1结束
+如果UIS:IsKeyDown(Enum.KeyCode.LeftShift)，则up=up-1结束
+finalDir=finalDir+Vector3.new(0，up，0)
+
+H:changeState(枚举.HumanoidStateType.Jumping)
+
+如果finalDir.Magnitude>0.01，则
+根速度=最终方向单位*飞行速度
+其他
+root.Velocity=Vector3.zero
+结束
+结束)
+结束
+结束
+
+局部函数makeDrag(obj)
+本地拖动，开始，位置，拖动时间
+obj.InputBegan:Connect(函数(i)
+如果i.UserInputType==枚举.UserInputType.Touch或i.UserInputType==枚举.UserInputType.MouseButton1，则
+drag=true；start=i.Position；pos=obj.Position；dragTime=tick()
+结束
+结束)
+obj.InputChanged:Connect(函数(i)
+如果拖动，则
+本地d=i.位置-开始
+obj.Position=UDim2.new(位置X.Scale，位置X.Offset+d.X，位置Y.Scale，位置Y.Offset+d.Y)
+结束
+结束)
+obj.InputEnded:Connect(函数(i)
+如果i.UserInputType==枚举.UserInputType.Touch或i.UserInputType==枚举.UserInputType.MouseButton1，则
+drag=false
+如果obj==btn，并且tick()-drawTime<0.2，则
+toggleFly()
+结束
+结束
+结束)
+结束
+makeDrag(btn)
+makeDrag(框)
+
+box.FocusLost：连接(功能()
+local num=tonumber(box.Text)
+如果num且num>0，则
+flyspeed=math.clamp(math.floor(num)，1，1000)
+结束
+box.Text=t字符串(飞行速度)
+结束)
