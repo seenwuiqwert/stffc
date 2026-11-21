@@ -1,0 +1,375 @@
+local Players = game:GetService("Players")
+local UIS = game:GetService("UserInputService")
+local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
+local correctKey = "13579246810"
+local pubId = "105346754"
+
+-- 清理旧 UI
+if PlayerGui:FindFirstChild("DemoUI") then
+    PlayerGui:FindFirstChild("DemoUI"):Destroy()
+end
+
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "DemoUI"
+ScreenGui.Parent = PlayerGui
+ScreenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+
+-- ================= 登录弹窗 =================
+local LoginFrame = Instance.new("Frame")
+LoginFrame.Size = UDim2.new(0, 340, 0, 260)
+LoginFrame.Position = UDim2.new(0.5, -170, 0.5, -130)
+LoginFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+LoginFrame.BorderSizePixel = 0
+LoginFrame.Parent = ScreenGui
+
+local DragBarLogin = Instance.new("Frame")
+DragBarLogin.Size = UDim2.new(1, 0, 0, 32)
+DragBarLogin.Position = UDim2.new(0, 0, 0, 0)
+DragBarLogin.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+DragBarLogin.Parent = LoginFrame
+
+local function makeDraggable(guiObject, dragHandle)
+    local dragging = false
+    local startOffset
+    dragHandle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            local pos = UIS:GetMouseLocation()
+            startOffset = Vector2.new(pos.X, pos.Y) - Vector2.new(guiObject.AbsolutePosition.X, guiObject.AbsolutePosition.Y)
+        end
+    end)
+    UIS.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+            local pos = UIS:GetMouseLocation()
+            local targetX = pos.X - startOffset.X
+            local targetY = pos.Y - startOffset.Y
+            guiObject.Position = UDim2.new(0, targetX, 0, targetY)
+        end
+    end)
+    UIS.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = false
+        end
+    end)
+end
+makeDraggable(LoginFrame, DragBarLogin)
+
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 36, 0, 32)
+CloseBtn.Position = UDim2.new(1, -38, 0, 0)
+CloseBtn.BackgroundColor3 = Color3.fromRGB(180, 40, 40)
+CloseBtn.TextColor3 = Color3.new(1, 1, 1)
+CloseBtn.Text = "X"
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextSize = 18
+CloseBtn.Parent = DragBarLogin
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(0.9, 0, 0, 48)
+Title.Position = UDim2.new(0.05, 0, 0.16, 0)
+Title.BackgroundTransparency = 1
+Title.TextColor3 = Color3.new(1, 1, 1)
+Title.Text = "欢迎使用我们的 killer 脚本\n前往微信公众号 " .. pubId .. " 购买"
+Title.TextWrapped = true
+Title.Font = Enum.Font.Gotham
+Title.TextSize = 14
+Title.Parent = LoginFrame
+
+local MsgLabel = Instance.new("TextLabel")
+MsgLabel.Size = UDim2.new(0.85, 0, 0, 24)
+MsgLabel.Position = UDim2.new(0.075, 0, 0.36, 0)
+MsgLabel.BackgroundTransparency = 1
+MsgLabel.TextColor3 = Color3.fromRGB(255, 85, 85)
+MsgLabel.Text = ""
+MsgLabel.Font = Enum.Font.Gotham
+MsgLabel.TextSize = 13
+MsgLabel.Parent = LoginFrame
+
+local InputBox = Instance.new("TextBox")
+InputBox.Size = UDim2.new(0.8, 0, 0, 36)
+InputBox.Position = UDim2.new(0.1, 0, 0.48, 0)
+InputBox.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+InputBox.TextColor3 = Color3.new(1, 1, 1)
+InputBox.PlaceholderText = ""
+InputBox.PlaceholderColor3 = Color3.new(0, 0, 0, 0)
+InputBox.Font = Enum.Font.Gotham
+InputBox.TextSize = 14
+InputBox.Parent = LoginFrame
+
+local SubmitBtn = Instance.new("TextButton")
+SubmitBtn.Size = UDim2.new(0.8, 0, 0, 36)
+SubmitBtn.Position = UDim2.new(0.1, 0, 0.66, 0)
+SubmitBtn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+SubmitBtn.TextColor3 = Color3.new(1, 1, 1)
+SubmitBtn.Text = "确认"
+SubmitBtn.Font = Enum.Font.Gotham
+SubmitBtn.TextSize = 14
+SubmitBtn.Parent = LoginFrame
+
+-- ================= 主功能面板 =================
+local MainPanel = Instance.new("Frame")
+MainPanel.Size = UDim2.new(0, 280, 0, 360)
+MainPanel.Position = UDim2.new(0.3, 0, 0.3, 0)
+MainPanel.BackgroundColor3 = Color3.fromRGB(25, 25, 25)
+MainPanel.BorderSizePixel = 0
+MainPanel.Visible = false
+MainPanel.Parent = ScreenGui
+
+local DragBarPanel = Instance.new("Frame")
+DragBarPanel.Size = UDim2.new(1, 0, 0, 28)
+DragBarPanel.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+DragBarPanel.Parent = MainPanel
+makeDraggable(MainPanel, DragBarPanel)
+
+local ScrollingFrame = Instance.new("ScrollingFrame")
+ScrollingFrame.Size = UDim2.new(1, -8, 1, -36)
+ScrollingFrame.Position = UDim2.new(0, 4, 0, 32)
+ScrollingFrame.BackgroundTransparency = 1
+ScrollingFrame.ScrollBarThickness = 6
+ScrollingFrame.Parent = MainPanel
+
+local UIList = Instance.new("UIListLayout")
+UIList.Padding = UDim.new(0, 10)
+UIList.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIList.Parent = ScrollingFrame
+
+-- ================= 核心功能状态与连接 =================
+local states = {
+    ESP = false,
+    Speed = false,
+    Jump = false,
+    Noclip = false,
+    Climb = false,
+    NightVision = false,
+    KillAura = false,
+    GodMode = false
+}
+
+local connections = {}
+local espHighlights = {}
+local originalLighting = {}
+
+-- 1. 玩家 ESP
+local function toggleESP(enable)
+    if enable then
+        connections.ESP = RunService.Heartbeat:Connect(function()
+            for _, plr in ipairs(Players:GetPlayers()) do
+                if plr ~= LocalPlayer and plr.Character then
+                    if not espHighlights[plr] or not espHighlights[plr].Parent then
+                        local hl = Instance.new("Highlight")
+                        hl.Adornee = plr.Character
+                        hl.FillTransparency = 1
+                        hl.OutlineColor = Color3.fromRGB(255, 0, 0)
+                        hl.OutlineTransparency = 0
+                        hl.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+                        hl.Parent = plr.Character
+                        espHighlights[plr] = hl
+                    end
+                end
+            end
+        end)
+    else
+        if connections.ESP then connections.ESP:Disconnect() end
+        for plr, hl in pairs(espHighlights) do
+            if hl then hl:Destroy() end
+        end
+        espHighlights = {}
+    end
+end
+
+-- 2. 修改速度
+local function toggleSpeed(enable)
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then hum.WalkSpeed = enable and 100 or 16 end
+end
+
+-- 3. 修改跳跃高度
+local function toggleJump(enable)
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        if enable then
+            hum.UseJumpPower = true
+            hum.JumpPower = 100
+        else
+            hum.JumpPower = 50
+        end
+    end
+end
+
+-- 4. 穿墙
+local function toggleNoclip(enable)
+    if enable then
+        connections.Noclip = RunService.Stepped:Connect(function()
+            local char = LocalPlayer.Character
+            if char then
+                for _, part in ipairs(char:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanCollide = false end
+                end
+            end
+        end)
+    else
+        if connections.Noclip then connections.Noclip:Disconnect() end
+    end
+end
+
+-- 5. 爬墙 (实现原理：穿墙 + 往前移动时获得向上推力)
+local function toggleClimb(enable)
+    local char = LocalPlayer.Character
+    local hrp = char and char:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    
+    if enable then
+        local bv = Instance.new("BodyVelocity")
+        bv.Name = "ClimbVelocity"
+        bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
+        bv.Velocity = Vector3.zero
+        bv.Parent = hrp
+        
+        connections.Climb = RunService.RenderStepped:Connect(function()
+            local c = LocalPlayer.Character
+            local r = c and c:FindFirstChild("HumanoidRootPart")
+            local h = c and c:FindFirstChildOfClass("Humanoid")
+            if r and h and bv then
+                local moveDir = h.MoveDirection
+                if moveDir.Magnitude > 0 then
+                    -- 当你在移动时，将部分向前的推力转化为向上的推力，实现爬墙效果
+                    bv.Velocity = moveDir * 10 + Vector3.new(0, 50, 0)
+                else
+                    bv.Velocity = Vector3.zero
+                end
+            end
+        end)
+    else
+        if connections.Climb then connections.Climb:Disconnect() end
+        local bv = hrp:FindFirstChild("ClimbVelocity")
+        if bv then bv:Destroy() end
+    end
+end
+
+-- 6. 夜视
+local function toggleNightVision(enable)
+    if enable then
+        originalLighting.Ambient = Lighting.Ambient
+        originalLighting.OutdoorAmbient = Lighting.OutdoorAmbient
+        originalLighting.Brightness = Lighting.Brightness
+        originalLighting.ClockTime = Lighting.ClockTime
+        
+        Lighting.Ambient = Color3.fromRGB(200, 200, 200)
+        Lighting.OutdoorAmbient = Color3.fromRGB(200, 200, 200)
+        Lighting.Brightness = 3
+        Lighting.ClockTime = 12
+    else
+        if originalLighting.Ambient then
+            Lighting.Ambient = originalLighting.Ambient
+            Lighting.OutdoorAmbient = originalLighting.OutdoorAmbient
+            Lighting.Brightness = originalLighting.Brightness
+            Lighting.ClockTime = originalLighting.ClockTime
+        end
+    end
+end
+
+-- 7. 杀戮光环 (5格范围内每秒扣20血)
+local function toggleKillAura(enable)
+    if enable then
+        connections.KillAura = task.spawn(function()
+            while states.KillAura do
+                local char = LocalPlayer.Character
+                local hrp = char and char:FindFirstChild("HumanoidRootPart")
+                if hrp then
+                    for _, plr in ipairs(Players:GetPlayers()) do
+                        if plr ~= LocalPlayer and plr.Character then
+                            local targetHrp = plr.Character:FindFirstChild("HumanoidRootPart")
+                            local targetHum = plr.Character:FindFirstChildOfClass("Humanoid")
+                            if targetHrp and targetHum and targetHum.Health > 0 then
+                                local dist = (hrp.Position - targetHrp.Position).Magnitude
+                                if dist <= 5 then
+                                    targetHum.Health = targetHum.Health - 20
+                                end
+                            end
+                        end
+                    end
+                end
+                task.wait(1) -- 每秒执行一次
+            end
+        end)
+    else
+        if connections.KillAura then
+            task.cancel(connections.KillAura)
+        end
+    end
+end
+
+-- 8. 无敌
+local function toggleGodMode(enable)
+    local char = LocalPlayer.Character
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if hum then
+        if enable then
+            hum.MaxHealth = 99999
+            hum.Health = 99999
+        else
+            hum.MaxHealth = 100
+            hum.Health = 100
+        end
+    end
+end
+
+-- ================= 创建 UI 按钮并绑定逻辑 =================
+local function createToggle(name, toggleCallback)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0.85, 0, 0, 44)
+    btn.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Text = name
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.Parent = ScrollingFrame
+
+    btn.MouseButton1Click:Connect(function()
+        states[name:gsub(" ", "")] = not states[name:gsub(" ", "")] -- 删除空格方便作为键名
+        local isOn = states[name:gsub(" ", "")]
+        
+        btn.BackgroundColor3 = isOn and Color3.fromRGB(40, 120, 255) or Color3.fromRGB(80, 80, 80)
+        
+        -- 执行回调
+        if toggleCallback then
+            toggleCallback(isOn)
+        end
+    end)
+    return btn
+end
+
+-- 绑定所有功能
+createToggle("玩家 ESP", toggleESP)
+createToggle("修改移动速度", toggleSpeed)
+createToggle("修改跳跃高度", toggleJump)
+createToggle("穿墙", toggleNoclip)
+createToggle("爬墙", toggleClimb)
+createToggle("夜视", toggleNightVision)
+createToggle("杀戮光环", toggleKillAura)
+createToggle("无敌", toggleGodMode)
+
+ScrollingFrame.CanvasSize = UDim2.new(0, 0, 0, 8 * 54 + 10)
+
+-- ================= 登录验证与弹窗交互 =================
+SubmitBtn.MouseButton1Click:Connect(function()
+    if InputBox.Text == correctKey then
+        MsgLabel.Text = "密钥正确！"
+        MsgLabel.TextColor3 = Color3.fromRGB(85, 255, 85)
+        LoginFrame.Visible = false
+        MainPanel.Visible = true
+    else
+        MsgLabel.Text = "请输入正确的密钥"
+        MsgLabel.TextColor3 = Color3.fromRGB(255, 85, 85)
+    end
+end)
+
+CloseBtn.MouseButton1Click:Connect(function()
+    LocalPlayer:Kick("请前往购买密钥，我需要赚钱的")
+end)
